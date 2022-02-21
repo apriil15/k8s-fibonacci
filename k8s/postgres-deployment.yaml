@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: postgres-secret
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data # container's data path
+              name: postgres-pv
+              # db 好像只有 postgres 要這樣用
+              subPath: postgres # container's mountPath would be mapped to pv's subPath
+      volumes: # ask k8s for resources
+        - name: postgres-pv
+          persistentVolumeClaim:
+            claimName: db-pvc # db-pvc.yaml -> metadata.name
