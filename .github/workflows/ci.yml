@@ -1,0 +1,14 @@
+name: unit tests
+
+on: [push]
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build test image and run test
+        run: |
+          docker build -t react-test -f ./client/Dockerfile.dev ./client
+          docker run -e CI=true react-test npm run test
