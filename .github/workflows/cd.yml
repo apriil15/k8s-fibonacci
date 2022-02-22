@@ -1,0 +1,68 @@
+name: deploy to GKE
+
+on:
+  workflow_run:
+    workflows:
+      - "unit tests"
+    branches: [master]
+    types:
+      - "completed"
+
+env:
+  GKE_CLUSTER: k8s-fibonacci
+  GKE_ZONE: asia-east1-a
+
+jobs:
+  push-to-docker-hub:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    name: push to docker hub
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: login to docker hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # build :latest for other engineer using
+      # build :sha    for GKE cluster deploy
+      - name: build image and push to docker hub
+        run: |
+          docker build -t nlwkobe30/complex-api:latest -t nlwkobe30/complex-api:$GITHUB_SHA -f ./api/Dockerfile ./api
+          docker build -t nlwkobe30/complex-client:latest -t nlwkobe30/complex-client:$GITHUB_SHA -f ./client/Dockerfile ./client
+          docker build -t nlwkobe30/complex-worker:latest -t nlwkobe30/complex-worker:$GITHUB_SHA -f ./worker/Dockerfile ./worker
+
+          docker push nlwkobe30/complex-api:latest
+          docker push nlwkobe30/complex-client:latest
+          docker push nlwkobe30/complex-worker:latest
+          docker push nlwkobe30/complex-api:$GITHUB_SHA
+          docker push nlwkobe30/complex-client:$GITHUB_SHA
+          docker push nlwkobe30/complex-worker:$GITHUB_SHA
+
+  setup-and-deploy:
+    needs: push-to-docker-hub
+    name: Setup and Deploy to k8s
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # setup gcloud CLI
+      - uses: google-github-actions/setup-gcloud@v0
+        with:
+          service_account_key: ${{ secrets.GKE_SA_KEY }}
+          project_id: ${{ secrets.GKE_PROJECT }}
+
+      # get the GKE credentials so we can deploy to the cluster
+      - run: |
+          gcloud container clusters get-credentials $GKE_CLUSTER --zone $GKE_ZONE
+
+      - name: Deploy
+        run: |
+          kubectl apply -f ./k8s
+          kubectl set image deployment/api-deployment api=nlwkobe30/complex-api:$GITHUB_SHA
+          kubectl set image deployment/client-deployment client=nlwkobe30/complex-client:$GITHUB_SHA
+          kubectl set image deployment/worker-deployment worker=nlwkobe30/complex-worker:$GITHUB_SHA
