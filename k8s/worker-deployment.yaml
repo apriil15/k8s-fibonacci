@@ -15,10 +15,10 @@ spec:
       containers:
         - name: worker
           image: nlwkobe30/complex-worker
-          # resources:
-          #   limits:
-          #     memory: "128Mi"
-          #     cpu: "500m"
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "250m"
           env:
             - name: REDIS_HOST
               value: redis-service # redis-service.yaml -> metadata.name
