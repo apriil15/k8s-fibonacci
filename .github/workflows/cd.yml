@@ -56,11 +56,10 @@ jobs:
           service_account_key: ${{ secrets.GKE_SA_KEY }}
           project_id: ${{ secrets.GKE_PROJECT }}
 
-      # get the GKE credentials so we can deploy to the cluster
-      - run: |
-          gcloud container clusters get-credentials $GKE_CLUSTER --zone $GKE_ZONE
+      - name: get k8s cluster credentials
+        run: gcloud container clusters get-credentials $GKE_CLUSTER --zone $GKE_ZONE
 
-      - name: Deploy
+      - name: deploy to k8s cluster
         run: |
           kubectl apply -f ./k8s
           kubectl set image deployment/api-deployment api=nlwkobe30/complex-api:$GITHUB_SHA
