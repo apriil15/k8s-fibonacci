@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: april15-dev-tls
+spec:
+  # will be automatically created and managed by this Certificate
+  secretName: april15-dev
+  issuerRef:
+    # issuer.metadata
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: april15.dev
+  dnsNames:
+    - april15.dev
+    - www.april15.dev
