@@ -14,3 +14,8 @@ call api in `Fib.js`
 - /api/values/all
 
 - /api/values
+
+## Others
+
+- Dockerfile: use multi layer build
+- serve at nginx

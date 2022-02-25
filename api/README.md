@@ -7,3 +7,7 @@
 - /values/current
 
 - /values
+
+## others
+
+- use redis pub/sub
