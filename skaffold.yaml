@@ -1,0 +1,38 @@
+apiVersion: skaffold/v2beta12
+kind: Config
+deploy:
+  kubectl:
+    manifests:
+      - ./k8s/dev/*
+build:
+  local:
+    push: false
+  artifacts:
+    - image: nlwkobe30/complex-client-dev
+      context: ./client
+      docker:
+        dockerfile: Dockerfile.dev
+      sync:
+        manual:
+          - src: "src/**/*.js"
+            dest: .
+          - src: "src/**/*.css"
+            dest: .
+          - src: "src/**/*.html"
+            dest: .
+    - image: nlwkobe30/complex-worker-dev
+      context: ./worker
+      docker:
+        dockerfile: Dockerfile.dev
+      sync:
+        manual:
+          - src: "*.js"
+            dest: .
+    - image: nlwkobe30/complex-api-dev
+      context: ./api
+      docker:
+        dockerfile: Dockerfile.dev
+      sync:
+        manual:
+          - src: "*.js"
+            dest: .
