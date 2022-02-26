@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: nlwkobe30/complex-api-dev
+          # resources:
+          #   limits:
+          #     memory: "128Mi"
+          #     cpu: "250m"
+          ports:
+            - containerPort: 5000
+          env:
+            - name: REDIS_HOST
+              value: redis-service
+            - name: REDIS_PORT
+              value: "6379"
+            - name: PG_USER
+              value: "postgres" # default user name
+            - name: PG_HOST
+              value: "postgres-service"
+            - name: PG_DATABASE
+              value: "postgres" # default db name
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: postgres-secret
+            - name: PG_PORT
+              value: "5432"
